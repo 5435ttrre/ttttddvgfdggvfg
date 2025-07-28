@@ -1,92 +1,69 @@
-import os
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
-from telegram.ext import Updater, CommandHandler, CallbackContext, CallbackQueryHandler, MessageHandler, Filters
+from telegram.ext import Application, CommandHandler, CallbackQueryHandler, ContextTypes
 
-OWNER_ID = 6359368706  # @ssgbots
+# === CONFIGURATION ===
+TOKEN = "7931224055:AAEvH_MLjJNmKxg_ytU0yu0Xpop3Xp7iSsA"
+OWNER_ID = 6359368706
 
-PAYMENT_INFO = """
-💰 *Price:* $24
-
-*Available Payment Methods:*
-
-🔸 *USDT TRC20:* `TFRFZgVKv7TQKxJBWEpvCaUKHHwRTkxrSr`
-🔸 *USDT BEP20:* `0x211758304df13388f6997099c995dc300f760f04`
-🔸 *Bitcoin:* `bc1q63fgffsq4my9zdcqjea6k3l6g8staeynw5wswu`
-
-📸 After payment, send screenshot within 15 minutes.
-"""
-
-keyboard = [
-    [InlineKeyboardButton("💰 Buy Now", callback_data="buy")],
-    [
-        InlineKeyboardButton("📊 Accuracy", url="https://poll.mgbt.xyz"),
-        InlineKeyboardButton("📝 Reviews", url="https://review.mgbt.xyz")
-    ],
-    [
-        InlineKeyboardButton("📽️ How to Use", url="https://youtu.be/EdxdQyPGP6U?si=EajC4JCsflaj91-7"),
-        InlineKeyboardButton("🆘 Support", url="https://t.me/ssgbots")
+# === START COMMAND ===
+async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    keyboard = [
+        [InlineKeyboardButton("🎁 Get Free License Key", callback_data='get_free')],
+        [InlineKeyboardButton("💳 Buy License Key", callback_data='buy_key')],
+        [InlineKeyboardButton("📊 Accuracy (96.8%)", url='https://poll.mgbt.xyz')],
+        [InlineKeyboardButton("🌟 Reviews (639)", url='https://review.mgbt.xyz')],
+        [InlineKeyboardButton("🎥 How to Use Guide", url='https://video.mgbt.xyz')],
+        [InlineKeyboardButton("💬 Support", url='https://t.me/ssgbots')],
     ]
-]
+    reply_markup = InlineKeyboardMarkup(keyboard)
 
-markup = InlineKeyboardMarkup(keyboard)
-
-# Handle /start
-def start(update: Update, context: CallbackContext):
-    update.message.reply_text(
-        "👋 Welcome to *MG BOT PRO*\n\nChoose an option below:",
-        parse_mode="Markdown",
-        reply_markup=markup
-    )
-
-# Handle button clicks
-def button_handler(update: Update, context: CallbackContext):
-    query = update.callback_query
-    query.answer()
-
-    if query.data == "buy":
-        query.message.reply_text(PAYMENT_INFO, parse_mode="Markdown")
-
-# Handle image/screenshot uploads
-def handle_photo(update: Update, context: CallbackContext):
-    update.message.reply_text("✅ Screenshot received. Please wait while we verify and send your license key...")
-
-    # Notify admin
-    context.bot.send_message(
-        chat_id=OWNER_ID,
-        text=f"📸 Payment screenshot received from @{update.effective_user.username or 'user'}\n"
-             f"User ID: {update.effective_user.id}\n\nSend license key with:\n"
-             f"`/sendkey {update.effective_user.id} YOUR_LICENSE_KEY`",
+    await update.message.reply_text(
+        "👋 Welcome to **MG BOT PRO**\n\n"
+        "🚀 AI-powered, high-accuracy trading signals for Quotex.\n"
+        "📈 Over *286,427 signals* with *96.8%* accuracy!\n\n"
+        "👇 Choose an option below to get started:",
+        reply_markup=reply_markup,
         parse_mode="Markdown"
     )
 
-# Admin command to send license
-def send_key(update: Update, context: CallbackContext):
-    if update.effective_user.id != OWNER_ID:
-        return update.message.reply_text("❌ You are not authorized to use this command.")
+# === CALLBACK HANDLER ===
+async def button_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    query = update.callback_query
+    await query.answer()
 
-    try:
-        user_id = int(context.args[0])
-        license_key = " ".join(context.args[1:])
-        context.bot.send_message(chat_id=user_id, text=f"🔑 Your license key: `{license_key}`", parse_mode="Markdown")
-        update.message.reply_text("✅ License key sent.")
-    except:
-        update.message.reply_text("⚠️ Usage: /sendkey USER_ID LICENSE_KEY")
+    if query.data == "get_free":
+        await query.edit_message_text(
+            "🎁 **Get Free License Key**\n\n"
+            "1️⃣ Create a Quotex account using our referral link:\n"
+            "👉 https://market-qx.pro/?lid=1314694\n\n"
+            "2️⃣ Deposit *at least $50* and complete verification.\n"
+            "3️⃣ Send your *Quotex Account ID* to @ssgbots\n\n"
+            "✅ You’ll receive your license key for FREE!\n\n"
+            "📩 For help, contact @ssgbots"
+        )
 
+    elif query.data == "buy_key":
+        await query.edit_message_text(
+            "💳 **Buy License Key**\n\n"
+            "💰 Price: $24 (One-time)\n\n"
+            "📌 Payment Options:\n\n"
+            "🔸 Binance Pay:\n"
+            "🔹 Pay ID: `171932375` (boter 66)\n\n"
+            "🔸 USDT (TRC20):\n"
+            "`TTBQWhF3uoBhynYCB2NsGBrrq4hcYxdXUw`\n\n"
+            "🔸 USDT (BEP20):\n"
+            "`0xa46e2beedc42d61ab6061adc4e9989a5624504da`\n\n"
+            "📸 After payment, send a screenshot to @ssgbots\n"
+            "🕒 You will receive your license key within *15 minutes*.\n\n"
+            "📩 For help, contact @ssgbots"
+        )
+
+# === MAIN ===
 def main():
-    TOKEN = os.getenv("BOT_TOKEN")
-    if not TOKEN:
-        raise Exception("BOT_TOKEN not set in Railway environment variables")
-
-    updater = Updater(TOKEN, use_context=True)
-    dp = updater.dispatcher
-
-    dp.add_handler(CommandHandler("start", start))
-    dp.add_handler(CallbackQueryHandler(button_handler))
-    dp.add_handler(MessageHandler(Filters.photo, handle_photo))
-    dp.add_handler(CommandHandler("sendkey", send_key, pass_args=True))
-
-    updater.start_polling()
-    updater.idle()
+    app = Application.builder().token(TOKEN).build()
+    app.add_handler(CommandHandler("start", start))
+    app.add_handler(CallbackQueryHandler(button_callback))
+    app.run_polling()
 
 if __name__ == "__main__":
     main()
